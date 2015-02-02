@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+
+# ping (not possbile with 1.8.7)
+# TCP port connectivity
+# forward DNS lookup
+# reverse DNS lookup
+# read list of hosts from the command line
+# read list of hosts from a simple text file
+# output info to standard output (sorted)
+
+# MAC addresses
+# allow filtering dups from input
+# read from pipes
+# read from a shell redirect(<)
+# parallel execution (fork child worker procs)
+
+# HTTP data
+# use SQLite database(in memory / on disk)
+# ouput csv file
+# output json
+# output yaml
+# allow for plugins
+
+# any deps should be rolled into a single file(like ack)
+
+require 'getoptlong'
+require 'socket'
+require 'timeout'
+require 'rdoc/usage'
+
+def is_port_open?(ip, port)
+  begin
+    Timeout::timeout(1) do
+      begin
+        s = TCPSocket.new(ip, port)
+        s.close
+        return true
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+        return false
+      end
+    end
+  rescue Timeout::Error
+  end
+  return false
+end 
+
+# START: convert to use OptionParser
+opts = GetoptLong.new(
+  [ '--port', '-p', GetoptLong::REQUIRED_ARGUMENT ]
+)
+
+port = 22
+opts.each do |opt, arg|
+  case opt
+    when '--port'
+      if arg.to_i != 0
+        port = arg
+      end
+  end
+end
+
+puts "port is #{port}"
+
+ARGV.each do |server|
+  if is_port_open?(server, port)
+    puts "#{server} PASS"
+  else
+    puts "#{server} FAIL"
+  end
+end
+
+# DNS stuff
+# http://ruby-doc.org/stdlib-1.8.7/libdoc/resolv/rdoc/Resolv.html
+
+# Parse Command Line
+# http://www.ruby-doc.org/stdlib-1.8.7/libdoc/optparse/rdoc/OptionParser.html
+
+# Sockets
+# http://ruby-doc.org/stdlib-1.8.7/libdoc/socket/rdoc/Socket.html
+# http://ruby-doc.org/stdlib-1.8.7/libdoc/socket/rdoc/TCPSocket.html
+
