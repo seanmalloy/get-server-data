@@ -1,36 +1,45 @@
 #!/usr/bin/env ruby
 
-# ping (not possbile with 1.8.7)
-# TCP port connectivity
-# forward DNS lookup
-# reverse DNS lookup
-# read list of hosts from the command line
-# read list of hosts from a simple text file
-# output info to standard output (sorted)
+# Version 1.0
+#
+# TCP port connectivity                                   DONE
+# look up IP addresses from DNS                           DONE
+# read list of hosts from the command line                DONE
+# output info to standard output                          TODO: needs to pretty print aligned columns
+# command line options for sorting and not sorting output TODO
 
+# Version 2.0
+#
+# ping (not possbile with 1.8.7)
+# ability to lookup different types of data from DNS
 # MAC addresses
 # allow filtering dups from input
 # read from pipes
 # read from a shell redirect(<)
 # parallel execution (fork child worker procs)
 
-# HTTP data
+# Version 3.0
+#
 # use SQLite database(in memory / on disk)
 # ouput csv file
 # output json
 # output yaml
-# allow for plugins
 
+# Version 4.0
+#
+# HTTP data
+# allow for plugins
 # any deps should be rolled into a single file(like ack)
 
-require 'getoptlong'
+require 'optparse'
+require 'ostruct'
 require 'socket'
 require 'timeout'
-require 'rdoc/usage'
+require 'resolv'
 
-def is_port_open?(ip, port)
+def is_port_open?(ip, port, timeout)
   begin
-    Timeout::timeout(1) do
+    Timeout::timeout(timeout) do
       begin
         s = TCPSocket.new(ip, port)
         s.close
@@ -44,30 +53,39 @@ def is_port_open?(ip, port)
   return false
 end 
 
-# START: convert to use OptionParser
-opts = GetoptLong.new(
-  [ '--port', '-p', GetoptLong::REQUIRED_ARGUMENT ]
-)
+options = OpenStruct.new
+options.port    = 22
+options.timeout = 1
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{File.basename($0)} [options]"
 
-port = 22
-opts.each do |opt, arg|
-  case opt
-    when '--port'
-      if arg.to_i != 0
-        port = arg
-      end
+  opts.on("-p", "--port PORT", Integer, "TCP port") do |port|
+    options.port = port
   end
-end
 
-puts "port is #{port}"
+  opts.on("-t", "--timeout SECONDS", Integer, "TCP connection timeout") do |seconds|
+    options.seconds = seconds
+  end
 
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# START
+# TODO: create has of hashes to store data
 ARGV.each do |server|
-  if is_port_open?(server, port)
-    puts "#{server} PASS"
+  ip = Resolv.getaddress(server)
+  if is_port_open?(server, options.port, options.timeout)
+    puts "#{server} #{ip} PASS"
   else
-    puts "#{server} FAIL"
+    puts "#{server} #{ip} FAIL"
   end
 end
+
+# TODO: iterate over hash and print data
+# TODO: format output with sprintf to get aligned columns
 
 # DNS stuff
 # http://ruby-doc.org/stdlib-1.8.7/libdoc/resolv/rdoc/Resolv.html
