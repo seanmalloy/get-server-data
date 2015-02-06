@@ -73,19 +73,30 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-# START
-# TODO: create has of hashes to store data
-ARGV.each do |server|
-  ip = Resolv.getaddress(server)
-  if is_port_open?(server, options.port, options.timeout)
-    puts "#{server} #{ip} PASS"
-  else
-    puts "#{server} #{ip} FAIL"
+servers = []
+hostname_max_length = 0
+ip_max_length = 0
+ARGV.each do |hostname|
+  ip = Resolv.getaddress(hostname)
+  if hostname.length > hostname_max_length
+    hostname_max_length = hostname.length
+  end
+
+  if ip.length > ip_max_length
+    ip_max_length = ip.length
+  end
+  data = { :hostname => hostname, :ip => ip, :status => 'FAIL' }
+  servers.push(data)
+  if is_port_open?(hostname, options.port, options.timeout)
+    servers[-1][:status] = 'PASS'
   end
 end
 
-# TODO: iterate over hash and print data
-# TODO: format output with sprintf to get aligned columns
+# TODO: format output with "format strings" to align columns
+servers.each do |server|
+  puts "#{server[:hostname]} #{server[:ip]} #{server[:status]}"
+end
+
 
 # DNS stuff
 # http://ruby-doc.org/stdlib-1.8.7/libdoc/resolv/rdoc/Resolv.html
