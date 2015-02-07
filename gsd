@@ -1,35 +1,30 @@
 #!/usr/bin/env ruby
 
-# Version 1.0
+# Copyright (c) 2015, Sean Malloy
+# All rights reserved.
 #
-# TCP port connectivity                                   DONE
-# look up IP addresses from DNS                           DONE
-# read list of hosts from the command line                DONE
-# output info to standard output                          TODO: needs to pretty print aligned columns
-# command line options for sorting and not sorting output TODO
-
-# Version 2.0
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-# ping (not possbile with 1.8.7)
-# ability to lookup different types of data from DNS
-# MAC addresses
-# allow filtering dups from input
-# read from pipes
-# read from a shell redirect(<)
-# parallel execution (fork child worker procs)
-
-# Version 3.0
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
 #
-# use SQLite database(in memory / on disk)
-# ouput csv file
-# output json
-# output yaml
-
-# Version 4.0
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
 #
-# HTTP data
-# allow for plugins
-# any deps should be rolled into a single file(like ack)
+# 3. Neither the name of the copyright holder nor the names of its contributors
+#    may be used to endorse or promote products derived from this software without
+#    specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 require 'optparse'
 require 'ostruct'
@@ -56,6 +51,7 @@ end
 options = OpenStruct.new
 options.port    = 22
 options.timeout = 1
+options.sort    = true
 OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename($0)} [options]"
 
@@ -65,6 +61,10 @@ OptionParser.new do |opts|
 
   opts.on("-t", "--timeout SECONDS", Integer, "TCP connection timeout") do |seconds|
     options.seconds = seconds
+  end
+
+  opts.on("-s", "--[no-]sort", "Sort output") do |sort|
+    options.sort = sort
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
@@ -92,19 +92,11 @@ ARGV.each do |hostname|
   end
 end
 
-# TODO: format output with "format strings" to align columns
-servers.each do |server|
-  puts "#{server[:hostname]} #{server[:ip]} #{server[:status]}"
+if options.sort
+  servers.sort! { |a, b| a[:hostname] <=> b[:hostname] }
 end
 
-
-# DNS stuff
-# http://ruby-doc.org/stdlib-1.8.7/libdoc/resolv/rdoc/Resolv.html
-
-# Parse Command Line
-# http://www.ruby-doc.org/stdlib-1.8.7/libdoc/optparse/rdoc/OptionParser.html
-
-# Sockets
-# http://ruby-doc.org/stdlib-1.8.7/libdoc/socket/rdoc/Socket.html
-# http://ruby-doc.org/stdlib-1.8.7/libdoc/socket/rdoc/TCPSocket.html
+servers.each do |server|
+  puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server[:hostname], server[:ip], server[:status] ]
+end
 
