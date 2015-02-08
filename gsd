@@ -48,6 +48,7 @@ def is_port_open?(ip, port, timeout)
   return false
 end 
 
+# Parse command line options
 options = OpenStruct.new
 options.port    = 22
 options.timeout = 1
@@ -73,10 +74,27 @@ OptionParser.new do |opts|
   end
 end.parse!
 
+# get list of servers
 servers = []
-hostname_max_length = 0
+if $stdin.tty?
+  # reading hostnames from command line
+  ARGV.each do |hostname|
+    servers.push(hostname)
+  end
+else
+  # reading hostnames from a pipe
+  $stdin.each do |hostname|
+    if hostname != "\n"
+      servers.push(hostname.chomp!)
+    end
+  end
+end
+
+# collect server data
+server_data = []
 ip_max_length = 0
-ARGV.each do |hostname|
+hostname_max_length = 0
+servers.each do |hostname|
   ip = Resolv.getaddress(hostname)
   if hostname.length > hostname_max_length
     hostname_max_length = hostname.length
@@ -85,18 +103,19 @@ ARGV.each do |hostname|
   if ip.length > ip_max_length
     ip_max_length = ip.length
   end
-  data = { :hostname => hostname, :ip => ip, :status => 'FAIL' }
-  servers.push(data)
+  host_data = { :hostname => hostname, :ip => ip, :status => 'FAIL' }
+  server_data.push(host_data)
   if is_port_open?(hostname, options.port, options.timeout)
-    servers[-1][:status] = 'PASS'
+    server_data[-1][:status] = 'PASS'
   end
 end
 
 if options.sort
-  servers.sort! { |a, b| a[:hostname] <=> b[:hostname] }
+  server_data.sort! { |a, b| a[:hostname] <=> b[:hostname] }
 end
 
-servers.each do |server|
+# print server data
+server_data.each do |server|
   puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server[:hostname], server[:ip], server[:status] ]
 end
 
