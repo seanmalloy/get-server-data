@@ -39,7 +39,7 @@ def is_port_open?(ip, port, timeout)
         s = TCPSocket.new(ip, port)
         s.close
         return true
-      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH,  SocketError
         return false
       end
     end
@@ -50,12 +50,17 @@ end
 
 # Parse command line options
 options = OpenStruct.new
+options.mode    = 'scan'
 options.port    = 22
 options.sort    = true
 options.timeout = 1
 options.unique  = true
 OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename($0)} [options]"
+
+  opts.on("-m", "--mode MODE", String, "Select mode (scan, dns)") do |mode|
+    options.mode = mode
+  end
 
   opts.on("-p", "--port PORT", Integer, "TCP port") do |port|
     options.port = port
@@ -84,13 +89,30 @@ servers = []
 if $stdin.tty?
   # reading hostnames from command line
   ARGV.each do |hostname|
-    servers.push(hostname)
+    if hostname =~ /^\d+\.\d+\.\d+.\d+$/
+      begin
+        servers.push(Resolv.getname(hostname))
+      rescue Resolv::ResolvError
+        servers.push(hostname)
+      end
+    else
+      servers.push(hostname)
+    end
   end
 else
   # reading hostnames from a pipe
   $stdin.each do |hostname|
     if hostname != "\n"
-      servers.push(hostname.chomp!)
+      hostname.chomp!
+      if hostname =~ /^\d+\.\d+\.\d+.\d+$/
+        begin
+          servers.push(Resolv.getname(hostname))
+        rescue Resolv::ResolvError
+          servers.push(hostname)
+        end
+      else
+        servers.push(hostname)
+      end
     end
   end
 end
@@ -104,19 +126,66 @@ end
 server_data = []
 ip_max_length = 0
 hostname_max_length = 0
-servers.each do |hostname|
-  ip = Resolv.getaddress(hostname)
-  if hostname.length > hostname_max_length
-    hostname_max_length = hostname.length
-  end
+if options.mode == 'scan'
+  # port scan mode
+  servers.each do |hostname|
+    begin
+      ip = Resolv.getaddress(hostname)
+    rescue Resolv::ResolvError
+      ip = "NOT_IN_DNS"
+    end
+    if hostname.length > hostname_max_length
+      hostname_max_length = hostname.length
+    end
 
-  if ip.length > ip_max_length
-    ip_max_length = ip.length
+    if ip.length > ip_max_length
+      ip_max_length = ip.length
+    end
+
+    host_data = { :hostname => hostname, :ip => ip, :status => 'FAIL' }
+    server_data.push(host_data)
+    if is_port_open?(hostname, options.port, options.timeout)
+      server_data[-1][:status] = 'PASS'
+    end
   end
-  host_data = { :hostname => hostname, :ip => ip, :status => 'FAIL' }
-  server_data.push(host_data)
-  if is_port_open?(hostname, options.port, options.timeout)
-    server_data[-1][:status] = 'PASS'
+elsif options.mode == 'dns'
+  # dns query mode
+  resolver = Resolv::DNS.new
+  servers.each do |hostname|
+    begin
+      ip = Resolv.getaddress(hostname)
+    rescue Resolv::ResolvError
+      ip = "NOT_IN_DNS"
+    end
+    if hostname.length > hostname_max_length
+      hostname_max_length = hostname.length
+    end
+
+    if ip.length > ip_max_length
+      ip_max_length = ip.length
+    end
+
+    dns_record_type = nil
+    begin
+      resolver.getresource(hostname, Resolv::DNS::Resource::IN::CNAME)
+    rescue Resolv::ResolvError
+      # do nothing
+    else
+      dns_record_type = 'CNAME'
+    end
+
+    if dns_record_type.nil?
+      begin
+        resolver.getresource(hostname, Resolv::DNS::Resource::IN::A)
+      rescue Resolv::ResolvError
+        # do nothing
+      else
+        dns_record_type = 'A'
+      end
+    end
+
+    host_data = { :hostname => hostname, :ip => ip, :dns => dns_record_type }
+    server_data.push(host_data)
   end
 end
 
@@ -126,6 +195,6 @@ end
 
 # print server data
 server_data.each do |server|
-  puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server[:hostname], server[:ip], server[:status] ]
+  puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s %s" % [ server[:hostname], server[:ip], server[:status], server[:dns] ]
 end
 
