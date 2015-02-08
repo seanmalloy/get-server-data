@@ -51,8 +51,9 @@ end
 # Parse command line options
 options = OpenStruct.new
 options.port    = 22
-options.timeout = 1
 options.sort    = true
+options.timeout = 1
+options.unique  = true
 OptionParser.new do |opts|
   opts.banner = "Usage: #{File.basename($0)} [options]"
 
@@ -60,12 +61,16 @@ OptionParser.new do |opts|
     options.port = port
   end
 
+  opts.on("-s", "--[no-]sort", "Sort output") do |s|
+    options.sort = s
+  end
+
   opts.on("-t", "--timeout SECONDS", Integer, "TCP connection timeout") do |seconds|
     options.seconds = seconds
   end
 
-  opts.on("-s", "--[no-]sort", "Sort output") do |sort|
-    options.sort = sort
+  opts.on("-u", "--[no-]unique", "Remove duplicate hostnames") do |u|
+    options.unique = u
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
@@ -88,6 +93,11 @@ else
       servers.push(hostname.chomp!)
     end
   end
+end
+
+# remove duplicate hostnames
+if options.unique
+  servers.uniq!
 end
 
 # collect server data
