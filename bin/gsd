@@ -26,27 +26,10 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+require 'gsd'
 require 'optparse'
 require 'ostruct'
-require 'socket'
-require 'timeout'
 require 'resolv'
-
-def is_port_open?(ip, port, timeout)
-  begin
-    Timeout::timeout(timeout) do
-      begin
-        s = TCPSocket.new(ip, port)
-        s.close
-        return true
-      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH,  SocketError
-        return false
-      end
-    end
-  rescue Timeout::Error
-  end
-  return false
-end 
 
 # Parse command line options
 options = OpenStruct.new
@@ -91,12 +74,12 @@ if $stdin.tty?
   ARGV.each do |hostname|
     if hostname =~ /^\d+\.\d+\.\d+.\d+$/
       begin
-        servers.push(Resolv.getname(hostname))
+        servers.push(ServerData.new(Resolv.getname(hostname), options.port))
       rescue Resolv::ResolvError
-        servers.push(hostname)
+        servers.push(ServerData,new(hostname, options.port))
       end
     else
-      servers.push(hostname)
+      servers.push(ServerData.new(hostname, options.port))
     end
   end
 else
@@ -106,12 +89,12 @@ else
       hostname.chomp!
       if hostname =~ /^\d+\.\d+\.\d+.\d+$/
         begin
-          servers.push(Resolv.getname(hostname))
+          servers.push(ServerData.new(Resolv.getname(hostname, options.port)))
         rescue Resolv::ResolvError
-          servers.push(hostname)
+          servers.push(ServerData.new(hostname, options.port))
         end
       else
-        servers.push(hostname)
+        servers.push(ServerData.new(hostname))
       end
     end
   end
@@ -119,82 +102,36 @@ end
 
 # remove duplicate hostnames
 if options.unique
-  servers.uniq!
+  servers.uniq! { |x| x.hostname }
+end
+
+# get ip addresses
+servers.each do |x|
+  x.ip!
 end
 
 # collect server data
 server_data = []
-ip_max_length = 0
-hostname_max_length = 0
 if options.mode == 'scan'
   # port scan mode
-  servers.each do |hostname|
-    begin
-      ip = Resolv.getaddress(hostname)
-    rescue Resolv::ResolvError
-      ip = "NOT_IN_DNS"
-    end
-    if hostname.length > hostname_max_length
-      hostname_max_length = hostname.length
-    end
-
-    if ip.length > ip_max_length
-      ip_max_length = ip.length
-    end
-
-    host_data = { :hostname => hostname, :ip => ip, :status => 'FAIL' }
-    server_data.push(host_data)
-    if is_port_open?(hostname, options.port, options.timeout)
-      server_data[-1][:status] = 'PASS'
-    end
+  servers.each do |x|
+    x.port_status!(options.timeout)
   end
 elsif options.mode == 'dns'
   # dns query mode
-  resolver = Resolv::DNS.new
-  servers.each do |hostname|
-    begin
-      ip = Resolv.getaddress(hostname)
-    rescue Resolv::ResolvError
-      ip = "NOT_IN_DNS"
-    end
-    if hostname.length > hostname_max_length
-      hostname_max_length = hostname.length
-    end
-
-    if ip.length > ip_max_length
-      ip_max_length = ip.length
-    end
-
-    dns_record_type = nil
-    begin
-      resolver.getresource(hostname, Resolv::DNS::Resource::IN::CNAME)
-    rescue Resolv::ResolvError
-      # do nothing
-    else
-      dns_record_type = 'CNAME'
-    end
-
-    if dns_record_type.nil?
-      begin
-        resolver.getresource(hostname, Resolv::DNS::Resource::IN::A)
-      rescue Resolv::ResolvError
-        # do nothing
-      else
-        dns_record_type = 'A'
-      end
-    end
-
-    host_data = { :hostname => hostname, :ip => ip, :dns => dns_record_type }
-    server_data.push(host_data)
+  servers.each do |x|
+    x.dns_record_type!
   end
 end
 
 if options.sort
-  server_data.sort! { |a, b| a[:hostname] <=> b[:hostname] }
+  servers.sort! { |a, b| a.hostname <=> b.hostname }
 end
 
 # print server data
-server_data.each do |server|
-  puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s %s" % [ server[:hostname], server[:ip], server[:status], server[:dns] ]
+hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
+ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+servers.each do |server|
+  puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s %s" % [ server.hostname, server.ip, server.port_status, server.dns_record_type ]
 end
 
