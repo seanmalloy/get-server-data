@@ -27,111 +27,101 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 require 'gsd'
-require 'optparse'
-require 'ostruct'
 require 'resolv'
+require 'thor'
 
-# Parse command line options
-options = OpenStruct.new
-options.mode    = 'scan'
-options.port    = 22
-options.sort    = true
-options.timeout = 1
-options.unique  = true
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{File.basename($0)} [options]"
-
-  opts.on("-m", "--mode MODE", String, "Select mode (scan, dns)") do |mode|
-    options.mode = mode
-  end
-
-  opts.on("-p", "--port PORT", Integer, "TCP port") do |port|
-    options.port = port
-  end
-
-  opts.on("-s", "--[no-]sort", "Sort output") do |s|
-    options.sort = s
-  end
-
-  opts.on("-t", "--timeout SECONDS", Integer, "TCP connection timeout") do |seconds|
-    options.seconds = seconds
-  end
-
-  opts.on("-u", "--[no-]unique", "Remove duplicate hostnames") do |u|
-    options.unique = u
-  end
-
-  opts.on_tail("-h", "--help", "Show this message") do
-    puts opts
-    exit
-  end
-end.parse!
-
-# get list of servers
-servers = []
-if $stdin.tty?
-  # reading hostnames from command line
-  ARGV.each do |hostname|
-    if hostname =~ /^\d+\.\d+\.\d+.\d+$/
-      begin
-        servers.push(ServerData.new(Resolv.getname(hostname), options.port))
-      rescue Resolv::ResolvError
-        servers.push(ServerData,new(hostname, options.port))
-      end
-    else
-      servers.push(ServerData.new(hostname, options.port))
+# convert input into a hostname
+def to_hostname(input)
+  if input =~ /^\d+\.\d+\.\d+.\d+$/
+    begin
+      return Resolv.getname(input)
+    rescue Resolv::ResolvError
+      return input
     end
+  else
+    return input
   end
-else
-  # reading hostnames from a pipe
-  $stdin.each do |hostname|
-    if hostname != "\n"
-      hostname.chomp!
-      if hostname =~ /^\d+\.\d+\.\d+.\d+$/
-        begin
-          servers.push(ServerData.new(Resolv.getname(hostname, options.port)))
-        rescue Resolv::ResolvError
-          servers.push(ServerData.new(hostname, options.port))
-        end
-      else
-        servers.push(ServerData.new(hostname))
+end
+
+def build_hostname_list(sort, unique, hosts)
+  hostnames = []
+  if $stdin.tty?
+    # reading hostnames from command line
+    hosts.each do |hostname|
+      hostnames.push(to_hostname(hostname))
+    end
+  else
+    # reading hostnames from a pipe
+    STDIN.each do |hostname|
+      if hostname != "\n"
+        hostname.chomp!
+        hostnames.push(to_hostname(hostname))
       end
     end
   end
-end
 
-# remove duplicate hostnames
-if options.unique
-  servers.uniq! { |x| x.hostname }
-end
-
-# get ip addresses
-servers.each do |x|
-  x.ip!
-end
-
-# collect server data
-server_data = []
-if options.mode == 'scan'
-  # port scan mode
-  servers.each do |x|
-    x.port_status!(options.timeout)
+  # remove duplicate hostnames
+  if unique
+    hostnames.uniq!
   end
-elsif options.mode == 'dns'
-  # dns query mode
-  servers.each do |x|
-    x.dns_record_type!
+
+  # sort by hostname
+  if sort
+    hostnames.sort!
+  end
+  return hostnames
+end
+
+class GetServerDataCli < Thor
+  class_option :sort, :default => true, :type => :boolean, :aliases => '-s'
+  class_option :unique, :default => true, :type => :boolean, :aliases => '-u'
+
+  desc "dns SERVER", "get info from dns"
+  def dns(*args)
+    hostnames = build_hostname_list(options[:sort], options[:unique], args)
+
+    servers = []
+    hostnames.each do |hostname|
+      servers.push(ServerData.new(hostname))
+    end
+
+    servers.each do |server|
+      server.ip!
+      server.dns_record_type!
+    end
+
+    # display results
+    hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
+    ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+    servers.each do |server|
+      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.dns_record_type ]
+    end
+  end
+
+  desc "tcp SERVER", "get info from tcp port scan"
+  option :port, :default => 22, :type => :numeric, :aliases => '-p'
+  option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
+  def tcp(*args)
+    hostnames = build_hostname_list(options[:sort], options[:unique], args)
+
+    servers = []
+    hostnames.each do |hostname|
+      servers.push(ServerData.new(hostname, options[:port]))
+    end
+
+    servers.each do |server|
+      server.ip!
+      server.port_status!
+    end
+
+    # display results
+    hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
+    ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+    servers.each do |server|
+      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.port_status ]
+    end
   end
 end
 
-if options.sort
-  servers.sort! { |a, b| a.hostname <=> b.hostname }
-end
-
-# print server data
-hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
-servers.each do |server|
-  puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s %s" % [ server.hostname, server.ip, server.port_status, server.dns_record_type ]
-end
+GetServerDataCli.start(ARGV)
 

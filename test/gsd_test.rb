@@ -30,7 +30,7 @@ require 'gsd'
 
 class TestServerData < Minitest::Test
   def setup
-    @server = ServerData.new('foohost.spmalloy.com', 22)
+    @server = ServerData.new('foohost.spmalloy.com')
   end
 
   def test_constructor
@@ -39,6 +39,9 @@ class TestServerData < Minitest::Test
     assert_nil @server.dns_record_type
     assert_nil @server.ip
     assert_nil @server.port_status
+
+    test_http_port = ServerData.new('foohost.spmalloy.com', 80)
+    assert_equal 80, test_http_port.port
   end
 
   def test_method_port_status

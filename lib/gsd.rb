@@ -29,7 +29,7 @@ require 'socket'
 require 'timeout'
 
 class ServerData
-  def initialize(h, p)
+  def initialize(h, p = 22)
     @dns_record_type = nil
     @hostname        = h
     @ip              = nil
