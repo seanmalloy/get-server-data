@@ -98,6 +98,29 @@ class GetServerDataCli < Thor
     end
   end
 
+  desc "ping SERVER", "ICMP ping a server"
+  option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
+  def ping(*args)
+    hostnames = build_hostname_list(options[:sort], options[:unique], args)
+
+    servers = []
+    hostnames.each do |hostname|
+      servers.push(ServerData.new(hostname))
+    end
+
+    servers.each do |server|
+      server.ip!
+      server.ping_status!
+    end
+
+    # display results
+    hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
+    ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+    servers.each do |server|
+      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.ping_status ]
+    end
+  end
+
   desc "tcp SERVER", "get info from tcp port scan"
   option :port, :default => 22, :type => :numeric, :aliases => '-p'
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'

@@ -86,5 +86,12 @@ class TestServerData < Minitest::Test
     cname.dns_record_type!
     assert_equal 'CNAME', cname.dns_record_type
   end
+
+  def test_ping_status
+    host = ServerData.new('localhost')
+    host.ip!
+    host.ping_status!
+    assert host.ping_status
+  end
 end
 

@@ -24,6 +24,7 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+require 'net/ping'
 require 'resolv'
 require 'socket'
 require 'timeout'
@@ -34,6 +35,7 @@ class ServerData
     @hostname        = h
     @ip              = nil
     @port            = p
+    @ping_status     = nil
     @port_status     = nil
   end
 
@@ -41,6 +43,7 @@ class ServerData
   attr_reader :hostname
   attr_reader :ip
   attr_reader :port
+  attr_reader :ping_status
   attr_reader :port_status
 
   def port_status!(timeout = 1)
@@ -89,6 +92,11 @@ class ServerData
         @dns_record_type = 'A'
       end
     end
+  end
+
+  def ping_status!(timeout = 1)
+    ping = Net::Ping::External.new(@hostname, 7, timeout)
+    @ping_status = ping.ping
   end
 end
 
