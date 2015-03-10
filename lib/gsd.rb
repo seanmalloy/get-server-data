@@ -69,7 +69,7 @@ class ServerData
     begin
       @ip = Resolv.getaddress(@hostname)
     rescue Resolv::ResolvError
-      @ip = nil
+      @ip = false
     end
   end
 
@@ -87,7 +87,7 @@ class ServerData
       begin
         resolver.getresource(@hostname, Resolv::DNS::Resource::IN::A)
       rescue Resolv::ResolvError
-        # do nothing
+        @dns_record_type = false
       else
         @dns_record_type = 'A'
       end
@@ -96,7 +96,11 @@ class ServerData
 
   def ping_status!(timeout = 1)
     ping = Net::Ping::External.new(@hostname, 7, timeout)
-    @ping_status = ping.ping
+    if ping.ping.nil?
+      @ping_status = false
+    else
+      @ping_status = ping.ping
+    end
   end
 end
 

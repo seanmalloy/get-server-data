@@ -92,7 +92,7 @@ class GetServerDataCli < Thor
 
     # display results
     hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-    ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+    ip_max_length       = servers.collect { |x| x.ip.to_s.length }.sort.last
     servers.each do |server|
       puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.dns_record_type ]
     end
@@ -115,7 +115,7 @@ class GetServerDataCli < Thor
 
     # display results
     hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-    ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+    ip_max_length       = servers.collect { |x| x.ip.to_s.length }.sort.last
     servers.each do |server|
       puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.ping_status ]
     end
@@ -139,7 +139,7 @@ class GetServerDataCli < Thor
 
     # display results
     hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-    ip_max_length       = servers.collect { |x| x.ip.length }.sort.last
+    ip_max_length       = servers.collect { |x| x.ip.to_s.length }.sort.last
     servers.each do |server|
       puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.port_status ]
     end
