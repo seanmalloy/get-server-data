@@ -108,9 +108,13 @@ class TestServerData < Minitest::Test
     assert_equal 'A', arecord.dns_record_type, 'verify dns_record_type for a dns A record'
 
     # DNS CNAME
-    cname = ServerData.new('www.spmalloy.com', 22)
-    cname.dns_record_type!
-    assert_equal 'CNAME', cname.dns_record_type, 'verify dns_record_type for a dns CNAME record'
+    if ENV['TRAVIS_CI_BUILD']
+      skip 'skipping CNAME tests in Travis CI'
+    else
+      cname = ServerData.new('www.spmalloy.com', 22)
+      cname.dns_record_type!
+      assert_equal 'CNAME', cname.dns_record_type, 'verify dns_record_type for a dns CNAME record'
+    end
   end
 
   def test_ping_status
