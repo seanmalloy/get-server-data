@@ -16,5 +16,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'minitest', '~> 5.5.1'
   s.add_development_dependency 'travis-lint', '~> 2.0.0'
   s.add_development_dependency 'bundler', '~> 1.8.4'
+  s.add_development_dependency 'coveralls'
 end
 
