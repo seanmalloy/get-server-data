@@ -131,10 +131,14 @@ class TestServerData < Minitest::Test
     refute_nil @server.ping_status, 'verify ping_status is not nil for host not in dns'
 
     # test result from successful ping
-    host = ServerData.new('localhost')
-    host.ip!
-    host.ping_status!
-    assert host.ping_status, 'verify ping_status for localhost'
+    if ENV['TRAVIS_CI_BUILD']
+      skip 'skipping local ping_status test in Travis CI'
+    else
+      host = ServerData.new('localhost')
+      host.ip!
+      host.ping_status!
+      assert host.ping_status, 'verify ping_status for localhost'
+    end
   end
 end
 
