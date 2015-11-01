@@ -10,12 +10,12 @@ Gem::Specification.new do |s|
   s.executables           << 'gsd'
   s.homepage              = 'https://github.com/seanmalloy/get-server-data'
   s.license               = 'BSD'
-  s.required_ruby_version = '>= 1.9.3'
+  s.required_ruby_version = '>= 2.0.0'
   s.add_runtime_dependency 'thor', '~> 0.19.1'
   s.add_runtime_dependency 'net-ping', '~> 1.7.7'
   s.add_development_dependency 'minitest', '~> 5.5.1'
   s.add_development_dependency 'travis-lint', '~> 2.0.0'
-  s.add_development_dependency 'bundler', '~> 1.8.4'
+  s.add_development_dependency 'bundler', '~> 1.7.8'
   s.add_development_dependency 'coveralls'
 end
 
