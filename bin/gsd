@@ -74,7 +74,7 @@ class GetServerDataCli < Thor
 
     servers.each do |server|
       server.get_ip
-      server.dns_record_type!
+      server.get_dns_type
     end
 
     # display results

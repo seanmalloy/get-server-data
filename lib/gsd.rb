@@ -86,7 +86,7 @@ class ServerData
     end
   end
 
-  def dns_record_type!
+  def get_dns_type
     resolver = Resolv::DNS.new
     begin
       resolver.getresource(@hostname, Resolv::DNS::Resource::IN::CNAME)

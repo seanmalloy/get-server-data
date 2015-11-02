@@ -98,16 +98,16 @@ class TestServerData < Minitest::Test
 
   def test_method_dns_record_type
     assert_respond_to @server, 'dns_record_type', 'ServerData instance responds to dns_record_type'
-    assert_respond_to @server, 'dns_record_type!', 'ServerData instance responds to dns_record_type!'
+    assert_respond_to @server, 'get_dns_type', 'ServerData instance responds to get_dns_type'
 
     # hosts not in DNS will be false
-    @server.dns_record_type!
+    @server.get_dns_type
     refute @server.dns_record_type, 'verify dns_record_type for host not in dns'
     refute_nil @server.dns_record_type, 'verify dns_record_type is not nil for host not in dns'
     
     # DNS A Record
     arecord = ServerData.new('spmalloy.com', 22)
-    arecord.dns_record_type!
+    arecord.get_dns_type
     assert_equal 'A', arecord.dns_record_type, 'verify dns_record_type for a dns A record'
 
     # DNS CNAME
@@ -115,7 +115,7 @@ class TestServerData < Minitest::Test
       skip 'skipping CNAME tests in Travis CI'
     else
       cname = ServerData.new('www.spmalloy.com', 22)
-      cname.dns_record_type!
+      cname.get_dns_type
       assert_equal 'CNAME', cname.dns_record_type, 'verify dns_record_type for a dns CNAME record'
     end
   end
