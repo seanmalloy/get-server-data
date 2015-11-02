@@ -97,7 +97,7 @@ class GetServerDataCli < Thor
 
     servers.each do |server|
       server.get_ip
-      server.ping_status!
+      server.ping
     end
 
     # display results

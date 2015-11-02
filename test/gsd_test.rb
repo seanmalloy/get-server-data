@@ -122,11 +122,11 @@ class TestServerData < Minitest::Test
 
   def test_ping_status
     assert_respond_to @server, 'ping_status', 'ServerData instance responds to ping_status'
-    assert_respond_to @server, 'ping_status!', 'ServerData instance responds to ping_status'
+    assert_respond_to @server, 'ping', 'ServerData instance responds to ping'
 
     # test result on a server not in dns
     @server.get_ip
-    @server.ping_status!
+    @server.ping
     refute @server.ping_status, 'verify ping_status for host not in dns'
     refute_nil @server.ping_status, 'verify ping_status is not nil for host not in dns'
 
@@ -136,7 +136,7 @@ class TestServerData < Minitest::Test
     else
       host = ServerData.new('localhost')
       host.get_ip
-      host.ping_status!
+      host.ping
       assert host.ping_status, 'verify ping_status for localhost'
     end
   end

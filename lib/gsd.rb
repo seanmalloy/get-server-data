@@ -107,7 +107,7 @@ class ServerData
     end
   end
 
-  def ping_status!(timeout = 1)
+  def ping(timeout = 1)
     ping = Net::Ping::External.new(@hostname, 7, timeout)
     if ping.ping.nil?
       @ping_status = false
