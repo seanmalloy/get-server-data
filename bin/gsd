@@ -30,32 +30,19 @@ require 'gsd'
 require 'resolv'
 require 'thor'
 
-# convert input into a hostname
-def to_hostname(input)
-  if input =~ /^\d+\.\d+\.\d+.\d+$/
-    begin
-      return Resolv.getname(input)
-    rescue Resolv::ResolvError
-      return input
-    end
-  else
-    return input
-  end
-end
-
 def build_hostname_list(sort, unique, hosts)
   hostnames = []
   if $stdin.tty?
     # reading hostnames from command line
     hosts.each do |hostname|
-      hostnames.push(to_hostname(hostname))
+      hostnames.push(ServerData.to_hostname(hostname))
     end
   else
     # reading hostnames from a pipe
     STDIN.each do |hostname|
       if hostname != "\n"
         hostname.chomp!
-        hostnames.push(to_hostname(hostname))
+        hostnames.push(ServerData.to_hostname(hostname))
       end
     end
   end

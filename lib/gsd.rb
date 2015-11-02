@@ -46,6 +46,19 @@ class ServerData
   attr_reader :ping_status
   attr_reader :port_status
 
+  # convert input into a hostname
+  def self.to_hostname(input)
+    if input =~ /^\d+\.\d+\.\d+.\d+$/
+      begin
+        return Resolv.getname(input)
+      rescue Resolv::ResolvError
+        return input
+      end
+    else
+      return input
+    end
+  end
+
   def port_status!(timeout = 1)
     begin
       Timeout::timeout(timeout) do
