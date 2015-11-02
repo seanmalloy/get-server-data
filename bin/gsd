@@ -66,22 +66,23 @@ class GetServerDataCli < Thor
   desc "dns SERVER", "get info from dns"
   def dns(*args)
     hostnames = build_hostname_list(options[:sort], options[:unique], args)
-
-    servers = []
+    results = {}
+    threads = []
     hostnames.each do |hostname|
-      servers.push(ServerData.new(hostname))
+      threads << Thread.new {
+        server = ServerData.new(hostname)
+        server.get_ip
+        server.get_dns_type
+        results[server.hostname] = { :ip => server.ip, :dns => server.dns_record_type }
+      }
     end
-
-    servers.each do |server|
-      server.get_ip
-      server.get_dns_type
-    end
+    threads.each { |thr| thr.join }
 
     # display results
-    hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-    ip_max_length       = servers.collect { |x| x.ip.to_s.length }.sort.last
-    servers.each do |server|
-      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.dns_record_type ]
+    hostname_max_length = results.keys.collect { |x| x.length }.sort.last
+    ip_max_length = results.values.collect { |x| x[:ip].length }.sort.last
+    results.each do |hostname, svr_data|
+      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ hostname, svr_data[:ip], svr_data[:dns] ]
     end
   end
 
@@ -89,22 +90,23 @@ class GetServerDataCli < Thor
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def ping(*args)
     hostnames = build_hostname_list(options[:sort], options[:unique], args)
-
-    servers = []
+    results = {}
+    threads = []
     hostnames.each do |hostname|
-      servers.push(ServerData.new(hostname))
+      threads << Thread.new {
+        server = ServerData.new(hostname)
+        server.get_ip
+        server.ping
+        results[server.hostname] = { :ip => server.ip, :ping => server.ping_status }
+      }
     end
-
-    servers.each do |server|
-      server.get_ip
-      server.ping
-    end
+    threads.each { |thr| thr.join }
 
     # display results
-    hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-    ip_max_length       = servers.collect { |x| x.ip.to_s.length }.sort.last
-    servers.each do |server|
-      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.ping_status ]
+    hostname_max_length = results.keys.collect { |x| x.length }.sort.last
+    ip_max_length = results.values.collect { |x| x[:ip].length }.sort.last
+    results.each do |hostname, svr_data|
+      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ hostname, svr_data[:ip], svr_data[:ping] ]
     end
   end
 
@@ -113,22 +115,23 @@ class GetServerDataCli < Thor
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def tcp(*args)
     hostnames = build_hostname_list(options[:sort], options[:unique], args)
-
-    servers = []
+    results = {}
+    threads = []
     hostnames.each do |hostname|
-      servers.push(ServerData.new(hostname, options[:port]))
+      threads << Thread.new {
+        server = ServerData.new(hostname, options[:port])
+        server.get_ip
+        server.get_port_status
+        results[server.hostname] = { :ip => server.ip, :port => server.port_status }
+      }
     end
-
-    servers.each do |server|
-      server.get_ip
-      server.get_port_status
-    end
+    threads.each { |thr| thr.join }
 
     # display results
-    hostname_max_length = servers.collect { |x| x.hostname.length }.sort.last
-    ip_max_length       = servers.collect { |x| x.ip.to_s.length }.sort.last
-    servers.each do |server|
-      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ server.hostname, server.ip, server.port_status ]
+    hostname_max_length = results.keys.collect { |x| x.length }.sort.last
+    ip_max_length = results.values.collect { |x| x[:ip].length }.sort.last
+    results.each do |hostname, svr_data|
+      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ hostname, svr_data[:ip], svr_data[:port] ]
     end
   end
 end
