@@ -78,7 +78,7 @@ class ServerData
     return false
   end 
 
-  def ip!
+  def get_ip
     begin
       @ip = Resolv.getaddress(@hostname)
     rescue Resolv::ResolvError

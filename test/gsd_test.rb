@@ -81,17 +81,17 @@ class TestServerData < Minitest::Test
 
   def test_method_ip
     assert_respond_to @server, 'ip', 'ServerData instance responds to ip'
-    assert_respond_to @server, 'ip!', 'ServerData instance responds to ip!'
+    assert_respond_to @server, 'get_ip', 'ServerData instance responds to get_ip'
 
 
     # hostname not in dns 
-    @server.ip!
+    @server.get_ip
     refute @server.ip, 'verify ip for a hostname not in dns'
     refute_nil @server.ip, 'verify ip is not nil for a hostname not in dns'
 
     # hostname in dns
     host = ServerData.new('localhost', 80)
-    host.ip!
+    host.get_ip
     refute_nil host.ip, 'verify ip for localhost'
     assert(host.ip =~ Resolv::IPv4::Regex || host.ip =~ Resolv::IPv6::Regex, 'verify ip regex for localhost')
   end
@@ -125,7 +125,7 @@ class TestServerData < Minitest::Test
     assert_respond_to @server, 'ping_status!', 'ServerData instance responds to ping_status'
 
     # test result on a server not in dns
-    @server.ip!
+    @server.get_ip
     @server.ping_status!
     refute @server.ping_status, 'verify ping_status for host not in dns'
     refute_nil @server.ping_status, 'verify ping_status is not nil for host not in dns'
@@ -135,7 +135,7 @@ class TestServerData < Minitest::Test
       skip 'skipping local ping_status test in Travis CI'
     else
       host = ServerData.new('localhost')
-      host.ip!
+      host.get_ip
       host.ping_status!
       assert host.ping_status, 'verify ping_status for localhost'
     end

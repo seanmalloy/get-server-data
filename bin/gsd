@@ -73,7 +73,7 @@ class GetServerDataCli < Thor
     end
 
     servers.each do |server|
-      server.ip!
+      server.get_ip
       server.dns_record_type!
     end
 
@@ -96,7 +96,7 @@ class GetServerDataCli < Thor
     end
 
     servers.each do |server|
-      server.ip!
+      server.get_ip
       server.ping_status!
     end
 
@@ -120,7 +120,7 @@ class GetServerDataCli < Thor
     end
 
     servers.each do |server|
-      server.ip!
+      server.get_ip
       server.get_port_status
     end
 
