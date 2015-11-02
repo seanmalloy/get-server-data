@@ -121,7 +121,7 @@ class GetServerDataCli < Thor
 
     servers.each do |server|
       server.ip!
-      server.port_status!
+      server.get_port_status
     end
 
     # display results

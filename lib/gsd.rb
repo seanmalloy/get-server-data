@@ -59,7 +59,7 @@ class ServerData
     end
   end
 
-  def port_status!(timeout = 1)
+  def get_port_status(timeout = 1)
     begin
       Timeout::timeout(timeout) do
         begin

@@ -60,21 +60,21 @@ class TestServerData < Minitest::Test
 
   def test_method_port_status
     assert_respond_to @server, 'port_status', 'ServerData instance responds to port_status'
-    assert_respond_to @server, 'port_status!', 'ServerData instance responds to port_status!'
+    assert_respond_to @server, 'get_port_status', 'ServerData instance responds to get_port_status'
 
     # open port on a host that exists
     host = ServerData.new('www.google.com', 80)
-    host.port_status!
+    host.get_port_status
     assert host.port_status, 'verify port 80 status to www.google.com'
 
     # closed port on a host that exists
     host = ServerData.new('www.google.com', 22)
-    host.port_status!
+    host.get_port_status
     refute host.port_status, 'verify port 22 status to www.google.com'
     refute_nil host.port_status, 'verify port_status is not nil when connection fails'
 
     # host does not exist
-    @server.port_status!
+    @server.get_port_status
     refute @server.port_status, 'verify port_status when connecting to host not in DNS'
     refute_nil @server.port_status, 'verify port_status is not nil when connecting to host not in dns'
   end
