@@ -65,17 +65,14 @@ class ServerData
         begin
           s = TCPSocket.new(@hostname, @port)
           s.close
-          @port_status = true
-          return true
+          return @port_status = true
         rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError
-          @port_status = false
-          return false
+          return @port_status = false
         end
       end
     rescue Timeout::Error
     end
     @port_status = false
-    return false
   end 
 
   def get_ip

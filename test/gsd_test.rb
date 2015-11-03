@@ -66,17 +66,22 @@ class TestServerData < Minitest::Test
     host = ServerData.new('www.google.com', 80)
     host.get_port_status
     assert host.port_status, 'verify port 80 status to www.google.com'
+    assert host.get_port_status, 'verify get_port_status returns true'
 
     # closed port on a host that exists
     host = ServerData.new('www.google.com', 22)
     host.get_port_status
     refute host.port_status, 'verify port 22 status to www.google.com'
     refute_nil host.port_status, 'verify port_status is not nil when connection fails'
+    refute host.get_port_status, 'verify get_port_status returns false'
+    refute_nil host.get_port_status, 'verify get_port_status return value is not nil when connection fails'
 
     # host does not exist
     @server.get_port_status
     refute @server.port_status, 'verify port_status when connecting to host not in DNS'
     refute_nil @server.port_status, 'verify port_status is not nil when connecting to host not in dns'
+    refute @server.get_port_status, 'verify get_port_status return value when connecting to host not in DNS'
+    refute_nil @server.get_port_status, 'verify get_port_status return value is not nil when connecting to host not in dns'
   end
 
   def test_method_ip
