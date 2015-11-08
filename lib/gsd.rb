@@ -46,7 +46,7 @@ class ServerData
   attr_reader :ping_status
   attr_reader :port_status
 
-  # convert input into a hostname
+  # convert ip into a hostname
   def self.to_hostname(input)
     if input =~ /^\d+\.\d+\.\d+.\d+$/
       begin
@@ -81,6 +81,7 @@ class ServerData
     rescue Resolv::ResolvError
       @ip = false
     end
+    @ip
   end
 
   def get_dns_type
@@ -102,6 +103,7 @@ class ServerData
         @dns_record_type = 'A'
       end
     end
+    @dns_record_type
   end
 
   def ping(timeout = 1)
@@ -111,6 +113,7 @@ class ServerData
     else
       @ping_status = ping.ping
     end
+    @ping_status
   end
 end
 

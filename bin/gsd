@@ -67,9 +67,7 @@ class GetServerDataCli < Thor
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname)
-        server.get_ip
-        server.get_dns_type
-        results << { :hostname => server.hostname, :ip => server.ip, :dns => server.dns_record_type }
+        results << { :hostname => server.hostname, :ip => server.get_ip, :dns => server.get_dns_type }
       }
     end
     threads.each { |thr| thr.join }
@@ -91,9 +89,7 @@ class GetServerDataCli < Thor
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname)
-        server.get_ip
-        server.ping
-        results << { :hostname => server.hostname, :ip => server.ip, :ping => server.ping_status }
+        results << { :hostname => server.hostname, :ip => server.get_ip, :ping => server.ping }
       }
     end
     threads.each { |thr| thr.join }
@@ -116,9 +112,7 @@ class GetServerDataCli < Thor
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname, options[:port])
-        server.get_ip
-        server.get_port_status
-        results << { :hostname => server.hostname, :ip => server.ip, :port => server.port_status }
+        results << { :hostname => server.hostname, :ip => server.get_ip, :port => server.get_port_status }
       }
     end
     threads.each { |thr| thr.join }
