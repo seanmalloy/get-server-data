@@ -29,8 +29,9 @@
 require 'gsd'
 require 'resolv'
 require 'thor'
+require 'table_print'
 
-def build_hostname_list(sort, unique, hosts)
+def build_hostname_list(unique, hosts)
   hostnames = []
   if $stdin.tty?
     # reading hostnames from command line
@@ -51,12 +52,7 @@ def build_hostname_list(sort, unique, hosts)
   if unique
     hostnames.uniq!
   end
-
-  # sort by hostname
-  if sort
-    hostnames.sort!
-  end
-  return hostnames
+  hostnames
 end
 
 class GetServerDataCli < Thor
@@ -65,48 +61,48 @@ class GetServerDataCli < Thor
 
   desc "dns SERVER", "get info from dns"
   def dns(*args)
-    hostnames = build_hostname_list(options[:sort], options[:unique], args)
-    results = {}
+    hostnames = build_hostname_list(options[:unique], args)
+    results = []
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname)
         server.get_ip
         server.get_dns_type
-        results[server.hostname] = { :ip => server.ip, :dns => server.dns_record_type }
+        results << { :hostname => server.hostname, :ip => server.ip, :dns => server.dns_record_type }
       }
     end
     threads.each { |thr| thr.join }
 
     # display results
-    hostname_max_length = results.keys.collect { |x| x.length }.sort.last
-    ip_max_length = results.values.collect { |x| x[:ip].length }.sort.last
-    results.each do |hostname, svr_data|
-      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ hostname, svr_data[:ip], svr_data[:dns] ]
+    if options[:sort]
+      tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
+    else
+      tp results
     end
   end
 
   desc "ping SERVER", "ICMP ping a server"
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def ping(*args)
-    hostnames = build_hostname_list(options[:sort], options[:unique], args)
-    results = {}
+    hostnames = build_hostname_list(options[:unique], args)
+    results = []
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname)
         server.get_ip
         server.ping
-        results[server.hostname] = { :ip => server.ip, :ping => server.ping_status }
+        results << { :hostname => server.hostname, :ip => server.ip, :ping => server.ping_status }
       }
     end
     threads.each { |thr| thr.join }
 
     # display results
-    hostname_max_length = results.keys.collect { |x| x.length }.sort.last
-    ip_max_length = results.values.collect { |x| x[:ip].length }.sort.last
-    results.each do |hostname, svr_data|
-      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ hostname, svr_data[:ip], svr_data[:ping] ]
+    if options[:sort]
+      tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
+    else
+      tp results
     end
   end
 
@@ -114,24 +110,24 @@ class GetServerDataCli < Thor
   option :port, :default => 22, :type => :numeric, :aliases => '-p'
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def tcp(*args)
-    hostnames = build_hostname_list(options[:sort], options[:unique], args)
-    results = {}
+    hostnames = build_hostname_list(options[:unique], args)
+    results = []
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname, options[:port])
         server.get_ip
         server.get_port_status
-        results[server.hostname] = { :ip => server.ip, :port => server.port_status }
+        results << { :hostname => server.hostname, :ip => server.ip, :port => server.port_status }
       }
     end
     threads.each { |thr| thr.join }
 
     # display results
-    hostname_max_length = results.keys.collect { |x| x.length }.sort.last
-    ip_max_length = results.values.collect { |x| x[:ip].length }.sort.last
-    results.each do |hostname, svr_data|
-      puts "%-#{hostname_max_length}s %-#{ip_max_length}s %s" % [ hostname, svr_data[:ip], svr_data[:port] ]
+    if options[:sort]
+      tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
+    else
+      tp results
     end
   end
 end
