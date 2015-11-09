@@ -57,16 +57,19 @@ def build_hostname_list(unique, hosts)
 end
 
 class GetServerDataCli < Thor
-  class_option :format, :default => "text", :type => :string, :aliases => '-f'
-  class_option :sort, :default => true, :type => :boolean, :aliases => '-s'
-  class_option :unique, :default => true, :type => :boolean, :aliases => '-u'
+  class_option :format, :default => "text", :type => :string, :aliases => '-f',
+    :desc => "Use FORMAT as the output format. FORMAT can be one of csv, json, or text"
+  class_option :sort, :default => true, :type => :boolean, :aliases => '-s',
+    :desc => "Sort output by hostname"
+  class_option :unique, :default => true, :type => :boolean, :aliases => '-u',
+    :desc => "Remove duplicate hostnames"
 
   def initialize(a, b, c)
     super
     @results = []
   end
 
-  desc "dns [OPTION...] HOSTNAME...", "Get information about hosts from DNS."
+  desc "dns [OPTION...] HOSTNAME...", "Get information about hosts from DNS"
   long_desc <<-LONGDESC
     Gets information from DNS for one or more hosts. Collects the IP address
     and DNS record type.
@@ -92,7 +95,7 @@ class GetServerDataCli < Thor
     self.print_results(options[:format])
   end
 
-  desc "ping [OPTION...] SERVER...", "Get information about hosts from ICMP(ping)."
+  desc "ping [OPTION...] HOSTNAME...", "Get information about hosts from ICMP(ping)"
   long_desc <<-LONGDESC
     Gets information from ICMP(ping) for one or more hosts. Collects the IP address
     and ICMP pings the hosts.
@@ -101,7 +104,7 @@ class GetServerDataCli < Thor
     \x5$ gsd ping --timeout 3 www.google.com
     \x5$ gsd ping www.openbsd.org www.google.com
   LONGDESC
-  option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
+  option :timeout, :default => 1, :type => :numeric, :aliases => '-t', :desc => "Set ICMP tiemout to N seconds"
   def ping(*args)
     hostnames = build_hostname_list(options[:unique], args)
     threads = []
@@ -120,7 +123,7 @@ class GetServerDataCli < Thor
     self.print_results(options[:format])
   end
 
-  desc "tcp [OPTION...] SERVER...", "Get information about a TCP port for hosts"
+  desc "tcp [OPTION...] HOSTNAME...", "Get information about a TCP port for hosts"
   long_desc <<-LONGDESC
     Tests TCP port connection to one or more hosts. Collects the IP address
     and tests TCP port connection to the hosts.
@@ -129,8 +132,8 @@ class GetServerDataCli < Thor
     \x5$ gsd tcp --timeout 3 www.google.com
     \x5$ gsd tcp --port 21 www.openbsd.org
   LONGDESC
-  option :port, :default => 22, :type => :numeric, :aliases => '-p'
-  option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
+  option :port, :default => 22, :type => :numeric, :aliases => '-p', :desc => "TCP port to test"
+  option :timeout, :default => 1, :type => :numeric, :aliases => '-t', :desc => "Set TCP timeout to N seconds"
   def tcp(*args)
     hostnames = build_hostname_list(options[:unique], args)
     threads = []
