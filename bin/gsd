@@ -59,7 +59,14 @@ class GetServerDataCli < Thor
   class_option :sort, :default => true, :type => :boolean, :aliases => '-s'
   class_option :unique, :default => true, :type => :boolean, :aliases => '-u'
 
-  desc "dns SERVER", "get info from dns"
+  desc "dns [OPTION...] HOSTNAME...", "Get information about hosts from DNS."
+  long_desc <<-LONGDESC
+    Gets information from DNS for one or more hosts. Collects the IP address
+    and DNS record type.
+
+    $ gsd dns www.google.com
+    \x5$ gsd dns www.openbsd.org www.google.com
+  LONGDESC
   def dns(*args)
     hostnames = build_hostname_list(options[:unique], args)
     results = []
@@ -73,14 +80,24 @@ class GetServerDataCli < Thor
     threads.each { |thr| thr.join }
 
     # display results
-    if options[:sort]
-      tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
-    else
-      tp results
+    if !results.empty?
+      if options[:sort]
+        tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
+      else
+        tp results
+      end
     end
   end
 
-  desc "ping SERVER", "ICMP ping a server"
+  desc "ping [OPTION...] SERVER...", "Get information about hosts from ICMP(ping)."
+  long_desc <<-LONGDESC
+    Gets information from ICMP(ping) for one or more hosts. Collects the IP address
+    and ICMP pings the hosts.
+
+    $ gsd ping www.google.com
+    \x5$ gsd ping --timeout 3 www.google.com
+    \x5$ gsd ping www.openbsd.org www.google.com
+  LONGDESC
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def ping(*args)
     hostnames = build_hostname_list(options[:unique], args)
@@ -95,14 +112,24 @@ class GetServerDataCli < Thor
     threads.each { |thr| thr.join }
 
     # display results
-    if options[:sort]
-      tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
-    else
-      tp results
+    if !results.empty?
+      if options[:sort]
+        tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
+      else
+        tp results
+      end
     end
   end
 
-  desc "tcp SERVER", "get info from tcp port scan"
+  desc "tcp [OPTION...] SERVER...", "Get information about a TCP port for hosts"
+  long_desc <<-LONGDESC
+    Tests TCP port connection to one or more hosts. Collects the IP address
+    and tests TCP port connection to the hosts.
+
+    $ gsd tcp www.google.com
+    \x5$ gsd tcp --timeout 3 www.google.com
+    \x5$ gsd tcp --port 21 www.openbsd.org
+  LONGDESC
   option :port, :default => 22, :type => :numeric, :aliases => '-p'
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def tcp(*args)
@@ -118,10 +145,12 @@ class GetServerDataCli < Thor
     threads.each { |thr| thr.join }
 
     # display results
-    if options[:sort]
-      tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
-    else
-      tp results
+    if !results.empty?
+      if options[:sort]
+        tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
+      else
+        tp results
+      end
     end
   end
 end
