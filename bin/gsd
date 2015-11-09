@@ -27,9 +27,10 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 require 'gsd'
+require 'json'
 require 'resolv'
-require 'thor'
 require 'table_print'
+require 'thor'
 
 def build_hostname_list(unique, hosts)
   hostnames = []
@@ -56,8 +57,14 @@ def build_hostname_list(unique, hosts)
 end
 
 class GetServerDataCli < Thor
+  class_option :format, :default => "text", :type => :string, :aliases => '-f'
   class_option :sort, :default => true, :type => :boolean, :aliases => '-s'
   class_option :unique, :default => true, :type => :boolean, :aliases => '-u'
+
+  def initialize(a, b, c)
+    super
+    @results = []
+  end
 
   desc "dns [OPTION...] HOSTNAME...", "Get information about hosts from DNS."
   long_desc <<-LONGDESC
@@ -69,24 +76,20 @@ class GetServerDataCli < Thor
   LONGDESC
   def dns(*args)
     hostnames = build_hostname_list(options[:unique], args)
-    results = []
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname)
-        results << { :hostname => server.hostname, :ip => server.get_ip, :dns => server.get_dns_type }
+        @results << { :hostname => server.hostname, :ip => server.get_ip, :dns => server.get_dns_type }
       }
     end
     threads.each { |thr| thr.join }
 
     # display results
-    if !results.empty?
-      if options[:sort]
-        tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
-      else
-        tp results
-      end
+    if options[:sort]
+      @results.sort! { |x,y| x[:hostname] <=> y[:hostname] }
     end
+    self.print_results(options[:format])
   end
 
   desc "ping [OPTION...] SERVER...", "Get information about hosts from ICMP(ping)."
@@ -101,24 +104,20 @@ class GetServerDataCli < Thor
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def ping(*args)
     hostnames = build_hostname_list(options[:unique], args)
-    results = []
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname)
-        results << { :hostname => server.hostname, :ip => server.get_ip, :ping => server.ping }
+        @results << { :hostname => server.hostname, :ip => server.get_ip, :ping => server.ping }
       }
     end
     threads.each { |thr| thr.join }
 
     # display results
-    if !results.empty?
-      if options[:sort]
-        tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
-      else
-        tp results
-      end
+    if options[:sort]
+      @results.sort! { |x,y| x[:hostname] <=> y[:hostname] }
     end
+    self.print_results(options[:format])
   end
 
   desc "tcp [OPTION...] SERVER...", "Get information about a TCP port for hosts"
@@ -134,22 +133,30 @@ class GetServerDataCli < Thor
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t'
   def tcp(*args)
     hostnames = build_hostname_list(options[:unique], args)
-    results = []
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
         server = ServerData.new(hostname, options[:port])
-        results << { :hostname => server.hostname, :ip => server.get_ip, :port => server.get_port_status }
+        @results << { :hostname => server.hostname, :ip => server.get_ip, :port => options[:port], :port_result => server.get_port_status }
       }
     end
     threads.each { |thr| thr.join }
 
     # display results
-    if !results.empty?
-      if options[:sort]
-        tp results.sort { |x,y| x[:hostname] <=> y[:hostname] }
-      else
-        tp results
+    if options[:sort]
+      @results.sort! { |x,y| x[:hostname] <=> y[:hostname] }
+    end
+    self.print_results(options[:format])
+  end
+
+  protected
+  def print_results(format)
+    if !@results.empty?
+      if format == "csv"
+      elsif format == "json"
+        puts @results.to_json
+      elsif format == "text"
+        tp @results
       end
     end
   end
