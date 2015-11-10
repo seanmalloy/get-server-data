@@ -5,3 +5,7 @@ Get Server Data
 
 Simple command line tool that collects data about servers.
 
+== Copyright
+Copyright (c) 2015 Sean Malloy. See [LICENSE](LICENSE) for further details.
+
+
