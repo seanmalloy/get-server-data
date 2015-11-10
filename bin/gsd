@@ -68,6 +68,14 @@ class GetServerDataCli < Thor
   def initialize(a, b, c)
     super
     @results = []
+
+    # validate --format option
+    if options[:format] != "csv" and options[:format] != "json" and options[:format] != "text"
+      puts "Invalid option: \"--format #{options[:format]}\""
+      puts ""
+      puts "Valid parameters for --format are: \"csv\" \"json\" \"text\""
+      exit 1
+    end
   end
 
   desc "dns [OPTION...] HOSTNAME...", "Get information about hosts from DNS"
