@@ -12,11 +12,13 @@ gem install gsd
 
 ## Usage
 
-### Get Data From DNS
+### Command dns
 
-### Get Data From Ping
+###  Command help
 
-### Get Data From TCP Port
+### Command ping
+
+### Command tcp
 
 ## Copyright
 Copyright (c) 2015 Sean Malloy. See [LICENSE](LICENSE) for further details.
