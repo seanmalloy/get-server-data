@@ -5,6 +5,19 @@ Get Server Data
 
 Simple command line tool that collects data about servers.
 
+## Installation
+```
+gem install gsd
+```
+
+## Usage
+
+### Get Data From DNS
+
+### Get Data From Ping
+
+### Get Data From TCP Port
+
 ## Copyright
 Copyright (c) 2015 Sean Malloy. See [LICENSE](LICENSE) for further details.
 
