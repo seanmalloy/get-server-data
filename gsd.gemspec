@@ -16,7 +16,9 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'net-ping', '~> 1.7.7'
   s.add_development_dependency 'minitest', '~> 5.5.1'
   s.add_development_dependency 'travis-lint', '~> 2.0.0'
-  s.add_development_dependency 'bundler', '~> 1.7.8'
+  s.add_development_dependency 'bundler', '~> 1.10.6'
   s.add_development_dependency 'coveralls'
+  s.add_development_dependency 'yard', '~> 0.8.7.6'
+  s.add_development_dependency 'rake', '~> 10.4.2'
 end
 

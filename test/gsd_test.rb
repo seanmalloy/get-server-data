@@ -90,8 +90,7 @@ class TestServerData < Minitest::Test
 
 
     # hostname not in dns 
-    @server.get_ip
-    refute @server.ip, 'verify ip for a hostname not in dns'
+    assert_equal "", @server.get_ip, 'verify ip for a hostname not in dns'
     refute_nil @server.ip, 'verify ip is not nil for a hostname not in dns'
 
     # hostname in dns

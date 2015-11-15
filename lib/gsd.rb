@@ -29,7 +29,12 @@ require 'resolv'
 require 'socket'
 require 'timeout'
 
+# Models server data (hostname, port, IP address, etc.)
 class ServerData
+  # Create ServerData object
+  #
+  # @param h [String] hostname
+  # @param p [Integer] port number
   def initialize(h, p = 22)
     @dns_record_type = nil
     @hostname        = h
@@ -39,14 +44,34 @@ class ServerData
     @port_status     = nil
   end
 
+  # @!attribute [r] dns_record_type
+  # @return [String] dns record type, "A" or "CNAME"
   attr_reader :dns_record_type
+
+  # @!attribute [r] hostname
+  # @return [String] hostname
   attr_reader :hostname
+
+  # @!attribute [r] ip
+  # @return [String] IP address
   attr_reader :ip
+
+  # @!attribute [r] port
+  # @return [Integer] port number
   attr_reader :port
+
+  # @!attribute [r] ping_status
+  # @return [Boolean] result of ping test
   attr_reader :ping_status
+
+  # @!attribute [r] port_status
+  # @return [Boolean] result of TCP port test
   attr_reader :port_status
 
-  # convert ip into a hostname
+  # Convert IP address to hostname
+  #
+  # @param input [String] IP address
+  # @return [String] hostname from DNS
   def self.to_hostname(input)
     if input =~ /^\d+\.\d+\.\d+.\d+$/
       begin
@@ -59,6 +84,10 @@ class ServerData
     end
   end
 
+  # Check TCP port connectivity
+  #
+  # @param timeout [Integer] TCP timeout in seconds
+  # @return [Boolean] success for failure of TCP connection
   def get_port_status(timeout = 1)
     begin
       Timeout::timeout(timeout) do
@@ -75,15 +104,21 @@ class ServerData
     @port_status = false
   end 
 
+  # Lookup server IP from DNS
+  #
+  # @return [String] IP address of the server
   def get_ip
     begin
       @ip = Resolv.getaddress(@hostname)
     rescue Resolv::ResolvError
-      @ip = false
+      @ip = ""
     end
     @ip
   end
 
+  # Lookup DNS record type
+  #
+  # @return [String] record type, "A" or "CNAME"
   def get_dns_type
     resolver = Resolv::DNS.new
     begin
@@ -106,6 +141,10 @@ class ServerData
     @dns_record_type
   end
 
+  # Check ICMP connectivity
+  #
+  # @param timeout [Integer] ICMP timeout in seconds
+  # @return [Boolean] success or failure of ICMP test
   def ping(timeout = 1)
     ping = Net::Ping::External.new(@hostname, 7, timeout)
     if ping.ping.nil?

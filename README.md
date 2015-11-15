@@ -61,5 +61,5 @@ www.spmalloy.com | 107.170.163.14 | 22   | true
 ```
 
 ## Copyright
-Copyright (c) 2015 Sean Malloy. See [LICENSE](LICENSE) for further details.
+Copyright (c) 2015 Sean Malloy. See [LICENSE](LICENSE.md) for further details.
 
