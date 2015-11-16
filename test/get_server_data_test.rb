@@ -28,8 +28,8 @@ require 'coveralls'
 Coveralls.wear!
 
 gem 'minitest'
-require 'minitest/autorun'
 require 'get_server_data'
+require 'minitest/autorun'
 require 'resolv'
 
 class TestServerData < Minitest::Test
@@ -106,7 +106,7 @@ class TestServerData < Minitest::Test
 
     # hosts not in DNS will be false
     @server.get_dns_type
-    refute @server.dns_record_type, 'verify dns_record_type for host not in dns'
+    assert_equal "", @server.dns_record_type, 'verify dns_record_type for host not in dns'
     refute_nil @server.dns_record_type, 'verify dns_record_type is not nil for host not in dns'
     
     # DNS A Record

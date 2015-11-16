@@ -133,7 +133,7 @@ class ServerData
       begin
         resolver.getresource(@hostname, Resolv::DNS::Resource::IN::A)
       rescue Resolv::ResolvError
-        @dns_record_type = false
+        @dns_record_type = ""
       else
         @dns_record_type = 'A'
       end
