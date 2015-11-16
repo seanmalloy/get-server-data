@@ -8,7 +8,7 @@ Simple command line tool that collects data about servers.
 
 ## Installation
 ```
-gem install gsd
+gem install get_server_data
 ```
 
 ## Usage
