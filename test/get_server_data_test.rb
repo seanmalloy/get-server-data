@@ -29,7 +29,7 @@ Coveralls.wear!
 
 gem 'minitest'
 require 'minitest/autorun'
-require 'gsd'
+require 'get_server_data'
 require 'resolv'
 
 class TestServerData < Minitest::Test
