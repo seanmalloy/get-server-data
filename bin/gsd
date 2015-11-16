@@ -33,29 +33,6 @@ require 'resolv'
 require 'table_print'
 require 'thor'
 
-def build_hostname_list(unique, hosts)
-  hostnames = []
-  if $stdin.tty?
-    # reading hostnames from command line
-    hosts.each do |hostname|
-      hostnames.push(ServerData.to_hostname(hostname))
-    end
-  else
-    # reading hostnames from a pipe
-    STDIN.each do |hostname|
-      if hostname != "\n"
-        hostname.chomp!
-        hostnames.push(ServerData.to_hostname(hostname))
-      end
-    end
-  end
-
-  # remove duplicate hostnames
-  if unique
-    hostnames.uniq!
-  end
-  hostnames
-end
 
 class GetServerDataCli < Thor
   class_option :format, :default => "text", :type => :string, :aliases => '-f',
@@ -87,7 +64,7 @@ class GetServerDataCli < Thor
     \x5$ gsd dns www.openbsd.org www.google.com
   LONGDESC
   def dns(*args)
-    hostnames = build_hostname_list(options[:unique], args)
+    hostnames = self.build_hostname_list(options[:unique], args)
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
@@ -115,7 +92,7 @@ class GetServerDataCli < Thor
   LONGDESC
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t', :desc => "Set ICMP tiemout to N seconds"
   def ping(*args)
-    hostnames = build_hostname_list(options[:unique], args)
+    hostnames = self.build_hostname_list(options[:unique], args)
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
@@ -144,7 +121,7 @@ class GetServerDataCli < Thor
   option :port, :default => 22, :type => :numeric, :aliases => '-p', :desc => "TCP port to test"
   option :timeout, :default => 1, :type => :numeric, :aliases => '-t', :desc => "Set TCP timeout to N seconds"
   def tcp(*args)
-    hostnames = build_hostname_list(options[:unique], args)
+    hostnames = self.build_hostname_list(options[:unique], args)
     threads = []
     hostnames.each do |hostname|
       threads << Thread.new {
@@ -175,6 +152,31 @@ class GetServerDataCli < Thor
         tp @results
       end
     end
+  end
+
+  # Get hosts from command line
+  def build_hostname_list(unique, hosts)
+    hostnames = []
+    if $stdin.tty?
+      # reading hostnames from command line
+      hosts.each do |hostname|
+        hostnames.push(ServerData.to_hostname(hostname))
+      end
+    else
+      # reading hostnames from a pipe
+      STDIN.each do |hostname|
+        if hostname != "\n"
+          hostname.chomp!
+          hostnames.push(ServerData.to_hostname(hostname))
+        end
+      end
+    end
+
+    # remove duplicate hostnames
+    if unique
+      hostnames.uniq!
+    end
+    hostnames
   end
 end
 
