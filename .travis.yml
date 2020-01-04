@@ -1,8 +1,11 @@
+---
+branches:
+  only:
+  - master
 language: ruby
 rvm:
   - 2.2.2
   - 2.1.7
-  - 2.0.0-p647
 script: bundle exec rake test
 env: TRAVIS_CI_BUILD=1
 
