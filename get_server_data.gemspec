@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'bundler', '~> 1.10'
   s.add_development_dependency 'coveralls', '~> 0.8'
   s.add_development_dependency 'minitest', '~> 5.5'
-  s.add_development_dependency 'rake', '~> 10.4'
+  s.add_development_dependency 'rake', '~> 12.3'
   s.add_development_dependency 'travis-lint', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.9.11'
 end
